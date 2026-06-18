@@ -350,6 +350,85 @@
   .pick.mine{background:rgba(255,210,63,.07)}
   .pick.mine:hover{background:rgba(255,210,63,.13)}
 
+  /* ---------- Calendar ---------- */
+  .cal-controls{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .cal-controls .seg{flex-wrap:wrap}
+  .cal-controls .seg button{font-size:11px;padding:6px 12px}
+  .cal-month{margin-bottom:6px}
+  .cal-month .mhead{display:flex;align-items:baseline;gap:10px;padding:14px 4px 8px;
+    border-bottom:1px solid var(--line);margin-bottom:10px;position:sticky;top:62px;
+    background:linear-gradient(180deg,var(--ink) 70%,transparent);z-index:3}
+  .cal-month .mhead h3{font-family:'Archivo';font-weight:800;font-size:17px;text-transform:uppercase;letter-spacing:.5px}
+  .cal-month .mhead .yr{font-family:'Barlow Condensed';font-weight:600;color:var(--txt-faint);
+    letter-spacing:2px;font-size:13px}
+  .cal-month .mhead .cnt{margin-left:auto;font-size:11px;color:var(--txt-faint);
+    font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px}
+  .evrow{display:grid;grid-template-columns:118px 1fr auto;gap:16px;align-items:center;
+    padding:11px 14px;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:8px;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));position:relative;overflow:hidden}
+  .evrow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c)}
+  .evrow .evdate{font-family:'Barlow Condensed';font-weight:600;font-size:13px;color:var(--txt);
+    text-transform:uppercase;letter-spacing:.5px;padding-left:6px}
+  .evrow .evdate small{display:block;color:var(--txt-faint);font-size:10px;letter-spacing:1px}
+  .evrow .evname{font-family:'Archivo';font-weight:700;font-size:15px}
+  .evrow .evname .evsport{display:inline-flex;align-items:center;gap:6px;font-family:'Inter';
+    font-weight:500;font-size:12px;color:var(--txt-dim);margin-top:2px}
+  .evrow .evname .sdot2{width:8px;height:8px;border-radius:50%}
+  .evrow .evtier{font-family:'Barlow Condensed';font-weight:700;text-transform:uppercase;
+    letter-spacing:1px;font-size:10px;padding:4px 10px;border-radius:20px;white-space:nowrap}
+  .tier-title{background:var(--accent);color:var(--ink)}
+  .tier-major{background:var(--accent-2);color:var(--ink)}
+  .tier-playoff{background:#2a3550;color:var(--txt)}
+  .tier-season{background:transparent;color:var(--txt-faint);border:1px solid var(--line)}
+
+  /* ---------- Admin ---------- */
+  #adminPanels{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;align-items:start}
+  .apanel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+  .apanel.wide{grid-column:1/-1}
+  .apanel h3{font-family:'Archivo';font-weight:800;font-size:16px;margin-bottom:3px;display:flex;align-items:center;gap:9px}
+  .apanel h3 .ico{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;
+    background:var(--panel-2);font-size:13px}
+  .apanel .psub{color:var(--txt-faint);font-size:12px;margin-bottom:16px}
+  .arow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 0;
+    border-bottom:1px solid var(--line-soft)}
+  .arow:last-child{border-bottom:none}
+  .arow .albl{font-size:13px;color:var(--txt)}
+  .arow .albl small{display:block;color:var(--txt-faint);font-size:11px;margin-top:1px}
+  .ainput{background:var(--ink);border:1px solid var(--line);border-radius:5px;color:var(--txt);
+    padding:7px 11px;font-family:'Inter';font-size:13px;width:128px;text-align:right}
+  .ainput:focus{outline:none;border-color:var(--accent-2)}
+  .ainput.short{width:74px}
+  select.ainput{text-align:left;width:auto;min-width:128px;cursor:pointer}
+  /* toggle */
+  .tg{position:relative;width:42px;height:23px;flex:none;cursor:pointer}
+  .tg input{opacity:0;width:0;height:0;position:absolute}
+  .tg .track{position:absolute;inset:0;background:var(--line);border-radius:20px;transition:background .15s}
+  .tg .knob{position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;
+    background:var(--txt-dim);transition:transform .15s, background .15s}
+  .tg input:checked + .track{background:rgba(58,214,199,.4)}
+  .tg input:checked + .track + .knob,
+  .tg input:checked ~ .knob{transform:translateX(19px);background:var(--accent-2)}
+  .ladder-edit{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft)}
+  .ladder-edit:last-child{border-bottom:none}
+  .ladder-edit .lname{flex:1;font-size:13px}
+  .ladder-edit .lname small{display:block;color:var(--txt-faint);font-size:11px}
+  .ladder-edit .lval{font-family:'Archivo';font-weight:800;color:var(--accent);font-size:14px}
+  .scoring-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+  .scoretoggle{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    background:var(--panel-2);border:1px solid var(--line-soft);border-radius:5px;padding:9px 11px}
+  .scoretoggle .st-lbl{display:flex;align-items:center;gap:7px;font-family:'Barlow Condensed';
+    font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+  .scoretoggle .st-lbl .sdot3{width:8px;height:8px;border-radius:50%}
+  .admin-savebar{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;
+    padding-top:16px;border-top:1px solid var(--line)}
+  .admin-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--accent-2);color:var(--ink);font-family:'Barlow Condensed';font-weight:700;
+    text-transform:uppercase;letter-spacing:1px;font-size:13px;padding:11px 22px;border-radius:6px;
+    opacity:0;transition:opacity .2s, transform .2s;pointer-events:none;z-index:99;
+    box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .admin-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (max-width:900px){#adminPanels{grid-template-columns:1fr}}
+
   /* footer note */
   .protonote{margin-top:24px;text-align:center;color:var(--txt-faint);font-size:11px;
     font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:2px}
@@ -377,6 +456,8 @@
       <button data-view="auction" onclick="showView('auction')">Auction</button>
       <button data-view="available" onclick="showView('available')">Top Available</button>
       <button data-view="draft" onclick="showView('draft')">Draft Board</button>
+      <button data-view="calendar" onclick="showView('calendar')">Calendar</button>
+      <button data-view="admin" onclick="showView('admin')">Admin</button>
     </nav>
     <div class="topbar-right">
       <div class="potpill">
@@ -523,6 +604,40 @@
       </table>
     </div>
     <div class="protonote">Prototype · first 15 rounds shown · full draft runs 51 rounds</div>
+  </section>
+
+  <!-- ============ CALENDAR ============ -->
+  <section class="view" id="calendar">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Season Window · NFL 2026 kickoff → end of MLB 2027</div>
+        <h1>Key Event Calendar</h1>
+      </div>
+      <div class="sub">The championships, majors, and Grand Slams that decide the Team Success lane and close out each sport's window. Filter by tier or sport.</div>
+    </div>
+    <div class="cal-controls">
+      <div class="seg" id="calTier"></div>
+      <span class="hint">Dates marked ~ are projected from league scheduling patterns and not yet finalized</span>
+    </div>
+    <div id="calTimeline"></div>
+    <div class="protonote">Prototype · event dates sourced from league schedules (June 2026)</div>
+  </section>
+
+  <!-- ============ ADMIN ============ -->
+  <section class="view" id="admin">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Commissioner Console</div>
+        <h1>League Admin</h1>
+      </div>
+      <div class="sub">Everything needed to configure and run GAIL. Changes here would propagate to scoring, the auction, and standings. This is a wireframe — controls are illustrative.</div>
+    </div>
+    <div id="adminPanels"></div>
+    <div class="admin-savebar">
+      <button class="btn ghost" onclick="adminToast('Reverted to last saved configuration')">Discard changes</button>
+      <button class="btn" onclick="adminToast('Configuration saved · would push live to all managers')">Save configuration</button>
+    </div>
+    <div class="protonote">Prototype · settings are illustrative and do not persist</div>
   </section>
 </main>
 
@@ -1222,6 +1337,170 @@ function renderDraftBoard(){
   $('#draftBody').innerHTML=body;
 }
 
+/* ----- calendar ----- */
+/* Event tiers: title (championship), major (golf major / tennis slam),
+   playoff (round/bracket start), season (regular-season bookends).
+   `proj` flags dates projected from scheduling patterns, not yet finalized. */
+const EVENTS = [
+  // 2026
+  {date:'2026-09-09', end:'', sport:'nfl', tier:'season',  name:'NFL Regular Season Kickoff'},
+  {date:'2026-10-20', end:'2026-11-01', sport:'mlb', tier:'title', name:'MLB World Series', proj:true},
+  {date:'2026-10-21', end:'', sport:'nba', tier:'season', name:'NBA Season Tip-off', proj:true},
+  {date:'2026-10-07', end:'', sport:'nhl', tier:'season', name:'NHL Season Opener', proj:true},
+  {date:'2026-08-29', end:'2026-09-12', sport:'wta', tier:'major', name:'US Open — Tennis'},
+  {date:'2026-08-29', end:'2026-09-12', sport:'atp', tier:'major', name:'US Open — Tennis'},
+  {date:'2026-08-15', end:'', sport:'epl', tier:'season', name:'Premier League 2026-27 Begins', proj:true},
+  // 2027
+  {date:'2027-01-16', end:'', sport:'nfl', tier:'playoff', name:'NFL Playoffs Begin'},
+  {date:'2027-01-17', end:'2027-01-31', sport:'atp', tier:'major', name:'Australian Open'},
+  {date:'2027-01-17', end:'2027-01-31', sport:'wta', tier:'major', name:'Australian Open'},
+  {date:'2027-02-14', end:'', sport:'nfl', tier:'title', name:'Super Bowl LXI'},
+  {date:'2027-04-08', end:'2027-04-11', sport:'pga', tier:'major', name:'The Masters'},
+  {date:'2027-04-17', end:'', sport:'nhl', tier:'playoff', name:'Stanley Cup Playoffs Begin', proj:true},
+  {date:'2027-04-18', end:'', sport:'nba', tier:'playoff', name:'NBA Playoffs Begin', proj:true},
+  {date:'2027-05-20', end:'2027-05-23', sport:'pga', tier:'major', name:'PGA Championship'},
+  {date:'2027-05-23', end:'2027-05-30', sport:'epl', tier:'title', name:'Premier League Final Day', proj:true},
+  {date:'2027-05-23', end:'2027-06-06', sport:'atp', tier:'major', name:'Roland-Garros (French Open)'},
+  {date:'2027-05-23', end:'2027-06-06', sport:'wta', tier:'major', name:'Roland-Garros (French Open)'},
+  {date:'2027-06-01', end:'2027-06-17', sport:'nhl', tier:'title', name:'Stanley Cup Final', proj:true},
+  {date:'2027-06-03', end:'2027-06-19', sport:'nba', tier:'title', name:'NBA Finals', proj:true},
+  {date:'2027-06-17', end:'2027-06-20', sport:'pga', tier:'major', name:'U.S. Open — Golf'},
+  {date:'2027-06-28', end:'2027-07-11', sport:'atp', tier:'major', name:'Wimbledon'},
+  {date:'2027-06-28', end:'2027-07-11', sport:'wta', tier:'major', name:'Wimbledon'},
+  {date:'2027-07-15', end:'2027-07-18', sport:'pga', tier:'major', name:'The Open Championship'},
+  {date:'2027-08-29', end:'2027-09-12', sport:'atp', tier:'major', name:'US Open — Tennis (2027)'},
+  {date:'2027-08-29', end:'2027-09-12', sport:'wta', tier:'major', name:'US Open — Tennis (2027)'},
+  {date:'2027-10-19', end:'2027-10-31', sport:'mlb', tier:'title', name:'MLB World Series — Season Close', proj:true},
+];
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+let calTierFilter='all';
+function fmtEvDate(e){
+  const d=new Date(e.date+'T12:00:00');
+  const opt={month:'short',day:'numeric'};
+  let s=d.toLocaleDateString('en-US',opt);
+  if(e.end){
+    const d2=new Date(e.end+'T12:00:00');
+    s+=' – '+d2.toLocaleDateString('en-US',opt);
+  }
+  return (e.proj?'~ ':'')+s;
+}
+function renderCalControls(){
+  const tiers=[{k:'all',l:'All events'},{k:'title',l:'Championships'},{k:'major',l:'Majors / Slams'},{k:'playoff',l:'Playoff starts'},{k:'season',l:'Season bookends'}];
+  $('#calTier').innerHTML=tiers.map(t=>`<button class="${t.k===calTierFilter?'active':''}" data-k="${t.k}">${t.l}</button>`).join('');
+  $('#calTier').onclick=e=>{const b=e.target.closest('button');if(!b)return;calTierFilter=b.dataset.k;renderCalControls();renderCalendar();};
+}
+function renderCalendar(){
+  const evs=EVENTS.filter(e=>calTierFilter==='all'||e.tier===calTierFilter)
+    .slice().sort((a,b)=>a.date.localeCompare(b.date));
+  // group by year-month
+  const groups={};
+  evs.forEach(e=>{
+    const d=new Date(e.date+'T12:00:00');
+    const key=d.getFullYear()+'-'+d.getMonth();
+    (groups[key]=groups[key]||[]).push(e);
+  });
+  const tierLabel={title:'Championship',major:'Major',playoff:'Playoffs',season:'Season'};
+  let html='';
+  Object.keys(groups).sort((a,b)=>{
+    const[ay,am]=a.split('-').map(Number),[by,bm]=b.split('-').map(Number);
+    return ay-by||am-bm;
+  }).forEach(key=>{
+    const[y,m]=key.split('-').map(Number);
+    const list=groups[key];
+    html+=`<div class="cal-month"><div class="mhead">
+      <h3>${MONTHS[m]}</h3><span class="yr">${y}</span>
+      <span class="cnt">${list.length} event${list.length!==1?'s':''}</span></div>`;
+    list.forEach(e=>{
+      const lane=LANES.find(l=>l.key===e.sport);
+      html+=`<div class="evrow" style="--c:${lane.color}">
+        <div class="evdate">${fmtEvDate(e)}</div>
+        <div class="evname">${e.name}
+          <span class="evsport"><span class="sdot2" style="background:${lane.color}"></span>${lane.label}</span>
+        </div>
+        <div class="evtier tier-${e.tier}">${tierLabel[e.tier]}</div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  $('#calTimeline').innerHTML=html;
+}
+
+/* ----- admin ----- */
+function adminToast(msg){
+  let t=document.querySelector('.admin-toast');
+  if(!t){t=document.createElement('div');t.className='admin-toast';document.body.appendChild(t);}
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function tg(id,on){return `<label class="tg"><input type="checkbox" id="${id}" ${on?'checked':''}><span class="track"></span><span class="knob"></span></label>`;}
+function renderAdmin(){
+  const teamLadder=[
+    ['League championship','Super Bowl, World Series, NBA, Stanley Cup, EPL',16],
+    ['UFC title win','—',12],
+    ['Golf major / tennis Grand Slam','two majors = one championship',8],
+    ['Regular tour title','ATP/WTA event, PGA Tour win',4],
+  ];
+  const scoringSports=LANES.filter(l=>l.key!=='team');
+  $('#adminPanels').innerHTML=`
+    <div class="apanel">
+      <h3><span class="ico">🏟️</span>League Setup</h3>
+      <div class="psub">Core identity and size.</div>
+      <div class="arow"><div class="albl">League name</div><input class="ainput" style="width:170px" value="Great American Inter-League"></div>
+      <div class="arow"><div class="albl">Managers</div><input class="ainput short" value="12"></div>
+      <div class="arow"><div class="albl">Season window<small>NFL kickoff → MLB close</small></div>
+        <select class="ainput"><option>Sep 2026 – Oct 2027</option><option>Custom…</option></select></div>
+      <div class="arow"><div class="albl">Draft date</div><input class="ainput" value="2026-08-22" type="date"></div>
+      <div class="arow"><div class="albl">Draft type</div>
+        <select class="ainput"><option>Snake · mixed sports</option><option>Snake · per sport</option><option>Auction</option></select></div>
+    </div>
+
+    <div class="apanel">
+      <h3><span class="ico">🪜</span>Ladder Scoring</h3>
+      <div class="psub">How each lane's finish converts to points.</div>
+      <div class="arow"><div class="albl">1st place pays</div><input class="ainput short" value="12"></div>
+      <div class="arow"><div class="albl">Last place pays</div><input class="ainput short" value="1"></div>
+      <div class="arow"><div class="albl">Step between places</div><input class="ainput short" value="1"></div>
+      <div class="arow"><div class="albl">Active lanes<small>10 sports + Team Success</small></div><input class="ainput short" value="11"></div>
+      <div class="arow"><div class="albl">Max total possible</div><input class="ainput short" value="132" readonly></div>
+      <div class="arow"><div class="albl">Overall tiebreaker<small>when totals tie</small></div>
+        <select class="ainput"><option>Most lanes won outright</option><option>Head-to-head</option></select></div>
+    </div>
+
+    <div class="apanel">
+      <h3><span class="ico">🏆</span>Team Success Bonuses</h3>
+      <div class="psub">Scarcity-scaled title ladder. Two majors = one championship.</div>
+      ${teamLadder.map(r=>`<div class="ladder-edit">
+        <div class="lname">${r[0]}<small>${r[1]}</small></div>
+        <input class="ainput short" value="+${r[2]}">
+      </div>`).join('')}
+      <div class="arow" style="margin-top:6px"><div class="albl">Stage bonuses scale proportionally</div>${tg('adm-stage',true)}</div>
+    </div>
+
+    <div class="apanel">
+      <h3><span class="ico">💰</span>In-Season Market</h3>
+      <div class="psub">Monthly auctions and trade controls.</div>
+      <div class="arow"><div class="albl">Monthly acquisition cap</div><input class="ainput short" value="$200"></div>
+      <div class="arow"><div class="albl">Max pickups / month</div><input class="ainput short" value="4"></div>
+      <div class="arow"><div class="albl">Auctions on free agents only</div>${tg('adm-fa',true)}</div>
+      <div class="arow"><div class="albl">Winning bids feed prize pot</div>${tg('adm-pot',true)}</div>
+      <div class="arow"><div class="albl">Trade veto window<small>majority-league veto</small></div><input class="ainput short" value="48 hrs"></div>
+      <div class="arow"><div class="albl">Trade deadline</div><input class="ainput" value="2027-07-01" type="date"></div>
+    </div>
+
+    <div class="apanel wide">
+      <h3><span class="ico">📊</span>Sport Lane Scoring</h3>
+      <div class="psub">Toggle which lanes are active and which scoring source each uses. Regular-season-only enforced for team sports (EPL exempt).</div>
+      <div class="scoring-grid">
+        ${scoringSports.map(l=>`<div class="scoretoggle">
+          <span class="st-lbl"><span class="sdot3" style="background:${l.color}"></span>${l.label}</span>
+          ${tg('adm-sport-'+l.key,true)}
+        </div>`).join('')}
+      </div>
+      <div class="arow" style="margin-top:14px"><div class="albl">Team sports: regular season only<small>postseason value flows to Team Success lane</small></div>${tg('adm-regonly',true)}</div>
+      <div class="arow"><div class="albl">EPL exempt (no playoff bracket)</div>${tg('adm-epl',true)}</div>
+    </div>`;
+}
+
 /* ----- cell mode toggle ----- */
 $('#cellMode').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
@@ -1238,6 +1517,8 @@ renderRuleTabs();renderRuleContent();
 renderAuction();
 renderAvailControls();renderAvail();
 renderDraftControls();renderDraftBoard();
+renderCalControls();renderCalendar();
+renderAdmin();
 </script>
 </body>
 </html>
