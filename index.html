@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAIL — The Great American Inter-League</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Archivo:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b0f1a;          /* near-black field */
+    --panel:#121826;        /* panel bg */
+    --panel-2:#1a2233;      /* raised panel */
+    --line:#24304a;         /* hairlines */
+    --line-soft:#1c2740;
+    --txt:#e8edf6;          /* primary text */
+    --txt-dim:#8c97ad;      /* secondary */
+    --txt-faint:#5c6680;
+    --accent:#ffd23f;       /* scoreboard amber */
+    --accent-2:#3ad6c7;     /* turf teal */
+    --hot:#ff5a52;          /* down/red */
+    --up:#46d17f;           /* up/green */
+    --lane-lo:#152033;
+    --lane-hi:#ffd23f;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(58,214,199,.06), transparent 60%),
+      radial-gradient(900px 500px at 0% 0%, rgba(255,210,63,.05), transparent 55%),
+      var(--ink);
+    color:var(--txt);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{background:var(--accent);color:var(--ink)}
+
+  /* ---------- Top bar ---------- */
+  header.topbar{
+    position:sticky;top:0;z-index:50;
+    background:linear-gradient(180deg, rgba(11,15,26,.97), rgba(11,15,26,.86));
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:1380px;margin:0 auto;padding:0 24px;
+    height:62px;display:flex;align-items:center;gap:28px;
+  }
+  .brand{display:flex;align-items:baseline;gap:10px;cursor:pointer;user-select:none}
+  .brand .mark{
+    font-family:'Archivo';font-weight:900;font-size:26px;letter-spacing:-1px;
+    color:var(--ink);background:var(--accent);
+    padding:2px 9px;border-radius:5px;line-height:1;
+    box-shadow:0 0 0 1px rgba(255,210,63,.4), 0 6px 18px rgba(255,210,63,.18);
+  }
+  .brand .full{font-family:'Barlow Condensed';font-weight:600;text-transform:uppercase;
+    letter-spacing:2.5px;font-size:12px;color:var(--txt-dim)}
+  nav.tabs{display:flex;gap:2px;margin-left:8px}
+  nav.tabs button{
+    background:none;border:none;color:var(--txt-dim);
+    font-family:'Barlow Condensed';font-weight:600;font-size:15px;
+    text-transform:uppercase;letter-spacing:1.2px;
+    padding:8px 16px;border-radius:5px;cursor:pointer;position:relative;
+    transition:color .15s, background .15s;
+  }
+  nav.tabs button:hover{color:var(--txt)}
+  nav.tabs button.active{color:var(--ink);background:var(--accent)}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:18px}
+  .potpill{
+    display:flex;flex-direction:column;align-items:flex-end;line-height:1.1
+  }
+  .potpill .lab{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1.5px;
+    font-size:10px;color:var(--txt-faint)}
+  .potpill .val{font-family:'Archivo';font-weight:800;font-size:18px;color:var(--accent-2)}
+  .me-chip{display:flex;align-items:center;gap:9px}
+  .me-chip .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3ad6c7,#2b8fd6);
+    display:grid;place-items:center;font-family:'Archivo';font-weight:800;font-size:13px;color:var(--ink)}
+  .me-chip .nm{font-size:13px;font-weight:600}
+  .me-chip .nm small{display:block;color:var(--txt-faint);font-weight:500;font-size:11px}
+
+  /* ---------- Layout ---------- */
+  main{max-width:1380px;margin:0 auto;padding:28px 24px 80px}
+  .view{display:none;animation:fade .25s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+  .page-head h1{font-family:'Archivo';font-weight:900;font-size:30px;letter-spacing:-.5px;line-height:1}
+  .page-head .eyebrow{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:2px;
+    font-size:12px;color:var(--accent);font-weight:600;margin-bottom:6px}
+  .page-head .sub{color:var(--txt-dim);font-size:13px;max-width:520px}
+
+  /* ---------- Standings: leaders strip ---------- */
+  .leaders{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
+  .leader{
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;position:relative;overflow:hidden;
+  }
+  .leader::before{content:"";position:absolute;inset:0;opacity:.5;
+    background:linear-gradient(110deg,transparent 40%,rgba(255,210,63,.07))}
+  .leader .rk{font-family:'Archivo';font-weight:900;font-size:40px;color:var(--line);
+    position:absolute;top:6px;right:14px;line-height:1}
+  .leader.r1 .rk{color:var(--accent)}
+  .leader .nm{font-family:'Barlow Condensed';font-weight:700;font-size:22px;text-transform:uppercase;
+    letter-spacing:.5px;position:relative}
+  .leader .team{color:var(--txt-faint);font-size:11px;margin-bottom:12px;position:relative}
+  .leader .pts{font-family:'Archivo';font-weight:800;font-size:30px;position:relative}
+  .leader .pts small{font-size:13px;color:var(--txt-dim);font-weight:600;margin-left:4px}
+  .leader .delta{position:relative;font-size:12px;font-weight:600;margin-top:2px}
+  .up{color:var(--up)} .down{color:var(--hot)} .flat{color:var(--txt-faint)}
+
+  /* ---------- Toggle / controls ---------- */
+  .controls{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .seg button{background:var(--panel);color:var(--txt-dim);border:none;cursor:pointer;
+    font-family:'Barlow Condensed';font-weight:600;text-transform:uppercase;letter-spacing:1px;
+    font-size:12px;padding:7px 14px}
+  .seg button.active{background:var(--accent);color:var(--ink)}
+  .hint{color:var(--txt-faint);font-size:12px}
+
+  /* ---------- Matrix table ---------- */
+  .tablewrap{border:1px solid var(--line);border-radius:var(--radius);overflow:auto;background:var(--panel)}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  #matrix thead th{
+    background:var(--panel-2);position:sticky;top:0;z-index:5;
+    font-family:'Barlow Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.8px;
+    font-size:11px;color:var(--txt-dim);padding:10px 8px;text-align:center;
+    border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none;
+  }
+  #matrix thead th:hover{color:var(--txt)}
+  #matrix thead th.sorted{color:var(--accent)}
+  #matrix thead th .arrow{font-size:9px;margin-left:2px;opacity:.8}
+  #matrix thead th.mgr{text-align:left;padding-left:16px;position:sticky;left:0;z-index:6}
+  #matrix thead th.tot{color:var(--accent)}
+  #matrix tbody td{padding:0;text-align:center;border-bottom:1px solid var(--line-soft)}
+  #matrix tbody tr:last-child td{border-bottom:none}
+  #matrix tbody tr:hover{background:rgba(58,214,199,.04)}
+  #matrix td.mgr{
+    text-align:left;padding:10px 12px 10px 16px;position:sticky;left:0;
+    background:var(--panel);z-index:2;border-right:1px solid var(--line);cursor:pointer;
+  }
+  #matrix tbody tr:hover td.mgr{background:#10182a}
+  .mgr-cell{display:flex;align-items:center;gap:10px}
+  .mgr-cell .pos{font-family:'Archivo';font-weight:800;font-size:14px;color:var(--txt-faint);width:18px;text-align:right}
+  .mgr-cell .av{width:26px;height:26px;border-radius:5px;display:grid;place-items:center;
+    font-family:'Archivo';font-weight:800;font-size:11px;color:var(--ink)}
+  .mgr-cell .who{line-height:1.15}
+  .mgr-cell .who b{font-weight:600;font-size:13px}
+  .mgr-cell .who small{display:block;color:var(--txt-faint);font-size:10px}
+  .cell{display:block;padding:11px 6px;font-variant-numeric:tabular-nums;font-weight:600;
+    color:var(--txt);position:relative}
+  .cell .lp{font-family:'Archivo';font-weight:800}
+  .cell .nat{display:block;font-size:9px;color:var(--txt-faint);margin-top:1px;font-weight:500}
+  td.totcol{font-family:'Archivo';font-weight:900;font-size:16px;color:var(--accent);
+    background:rgba(255,210,63,.05);border-left:1px solid var(--line)}
+  .winmark{position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--accent-2)}
+
+  /* expand row */
+  tr.detail td{padding:0;background:#0c1322}
+  .detail-inner{padding:16px 16px 18px 56px;display:none}
+  tr.detail.open .detail-inner{display:block;animation:fade .2s}
+  .detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+  .lane-card{background:var(--panel);border:1px solid var(--line-soft);border-radius:5px;padding:9px 11px}
+  .lane-card .ln{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1px;
+    font-size:11px;color:var(--txt-dim);display:flex;justify-content:space-between;align-items:center}
+  .lane-card .ln .lpos{color:var(--accent);font-weight:700}
+  .lane-card .lbar{height:5px;border-radius:3px;background:var(--line);margin:7px 0 5px;overflow:hidden}
+  .lane-card .lbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent-2),var(--accent))}
+  .lane-card .lnat{font-size:11px;color:var(--txt-faint)}
+
+  /* ---------- Roster ---------- */
+  .sportnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+  .sportnav button{background:var(--panel);border:1px solid var(--line);color:var(--txt-dim);
+    font-family:'Barlow Condensed';font-weight:600;text-transform:uppercase;letter-spacing:1px;
+    font-size:13px;padding:7px 14px;border-radius:20px;cursor:pointer;display:flex;align-items:center;gap:7px}
+  .sportnav button .dot{width:7px;height:7px;border-radius:50%}
+  .sportnav button.active{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+  .roster-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+  .roster-head h2{font-family:'Archivo';font-weight:800;font-size:22px;display:flex;align-items:center;gap:10px}
+  .roster-head .lanebadge{font-family:'Barlow Condensed';font-weight:600;font-size:13px;
+    text-transform:uppercase;letter-spacing:1px;color:var(--ink);background:var(--accent-2);padding:3px 11px;border-radius:4px}
+  .roster-head .fmt{color:var(--txt-dim);font-size:13px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+  .pcard{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line);
+    border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:9px;position:relative}
+  .pcard.bench{opacity:.72;border-style:dashed}
+  .pcard .slot{position:absolute;top:10px;right:12px;font-family:'Barlow Condensed';font-size:10px;
+    text-transform:uppercase;letter-spacing:1.5px;color:var(--txt-faint)}
+  .pcard .pn{font-family:'Barlow Condensed';font-weight:700;font-size:18px;line-height:1.05}
+  .pcard .pmeta{color:var(--txt-faint);font-size:11px}
+  .pcard .pstat{display:flex;align-items:baseline;gap:6px;margin-top:2px}
+  .pcard .pstat b{font-family:'Archivo';font-weight:800;font-size:24px;color:var(--accent)}
+  .pcard .pstat span{font-size:11px;color:var(--txt-dim)}
+  .pcard .spark{height:30px;display:flex;align-items:flex-end;gap:3px;margin-top:2px}
+  .pcard .spark i{flex:1;background:linear-gradient(180deg,var(--accent-2),rgba(58,214,199,.25));border-radius:2px 2px 0 0;min-height:3px}
+
+  /* ESPN-style roster table */
+  .rostertable{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+  .rostertable th{background:var(--panel-2);padding:10px 8px;font-family:'Barlow Condensed';
+    text-transform:uppercase;letter-spacing:.8px;font-size:11px;color:var(--txt-dim);
+    border-bottom:1px solid var(--line);white-space:nowrap;text-align:center}
+  .rostertable th.rl-slot{text-align:center;width:54px}
+  .rostertable th.rl-name{text-align:left;padding-left:16px;width:24%}
+  .rostertable th.rl-num{text-align:center}
+  .rostertable th.rl-tot{color:var(--accent);text-align:center;width:13%}
+  .rostertable td{padding:12px 8px;border-bottom:1px solid var(--line-soft);text-align:center;
+    font-variant-numeric:tabular-nums;font-family:'Archivo';font-weight:600}
+  .rostertable tr:hover td{background:rgba(58,214,199,.04)}
+  .rostertable .rl-slot{text-align:center;font-family:'Barlow Condensed';font-weight:700;font-size:11px;
+    text-transform:uppercase;letter-spacing:1px;color:var(--accent-2)}
+  .rostertable .rl-name{text-align:left;padding-left:16px;font-family:'Inter';font-weight:400;
+    overflow:hidden;text-overflow:ellipsis}
+  .rostertable .rl-name b{font-weight:600;font-size:13px}
+  .rostertable .rl-name small{display:block;color:var(--txt-faint);font-size:11px;font-weight:500}
+  .rostertable .rl-num{color:var(--txt);text-align:center}
+  .rostertable .rl-num .z{color:var(--txt-faint)}
+  .rostertable .rl-tot{font-family:'Archivo';font-weight:800;font-size:15px;color:var(--accent);
+    text-align:center;background:rgba(255,210,63,.05);border-left:1px solid var(--line-soft)}
+  .rostertable tr.rl-bench td{opacity:.55}
+  .rostertable tr.rl-bench .rl-slot{color:var(--txt-faint)}
+  .rostertable tr.rl-sum td{border-top:2px solid var(--line);border-bottom:none;background:var(--panel-2)}
+  .rostertable tr.rl-sum .rl-tot{font-size:17px;background:rgba(255,210,63,.10)}
+  .rostertable tr.rl-sum:hover td{background:var(--panel-2)}
+  .rostertable tr.rl-sum:hover .rl-tot{background:rgba(255,210,63,.10)}
+
+  /* ---------- Scoring / rules ---------- */
+  .rules-layout{display:grid;grid-template-columns:200px 1fr;gap:22px}
+  .rule-tabs{display:flex;flex-direction:column;gap:3px;position:sticky;top:80px;align-self:start}
+  .rule-tabs button{text-align:left;background:none;border:none;border-left:2px solid var(--line);
+    color:var(--txt-dim);font-family:'Barlow Condensed';font-weight:600;text-transform:uppercase;
+    letter-spacing:1px;font-size:13px;padding:8px 14px;cursor:pointer}
+  .rule-tabs button:hover{color:var(--txt)}
+  .rule-tabs button.active{color:var(--accent);border-left-color:var(--accent);background:rgba(255,210,63,.05)}
+  .rule-panel{display:none}
+  .rule-panel.active{display:block;animation:fade .2s}
+  .rule-panel h3{font-family:'Archivo';font-weight:800;font-size:20px;margin-bottom:10px}
+  .rule-panel p{color:var(--txt-dim);font-size:14px;line-height:1.65;margin-bottom:12px;max-width:680px}
+  .rule-panel .callout{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent-2);
+    border-radius:5px;padding:13px 16px;margin:14px 0;font-size:13px;color:var(--txt)}
+  .rule-panel .callout b{color:var(--accent-2)}
+  .scoretable{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .scoretable th{background:var(--panel-2);text-align:left;padding:9px 13px;font-family:'Barlow Condensed';
+    text-transform:uppercase;letter-spacing:1px;font-size:11px;color:var(--txt-dim)}
+  .scoretable td{padding:9px 13px;border-top:1px solid var(--line-soft);color:var(--txt)}
+  .scoretable td:last-child{text-align:right;font-family:'Archivo';font-weight:700;color:var(--accent)}
+  .ladder{display:flex;flex-direction:column;gap:5px;margin:14px 0;max-width:520px}
+  .ladder .rung{display:flex;align-items:center;gap:12px}
+  .ladder .rung .lab{width:140px;font-size:13px;color:var(--txt-dim)}
+  .ladder .rung .track{flex:1;height:22px;background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .ladder .rung .track i{display:block;height:100%;background:linear-gradient(90deg,var(--accent-2),var(--accent))}
+  .ladder .rung .v{width:54px;text-align:right;font-family:'Archivo';font-weight:800;color:var(--accent)}
+
+  /* ---------- Auction ---------- */
+  .auc-layout{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start}
+  .lots{display:flex;flex-direction:column;gap:12px}
+  .lot{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line);
+    border-radius:var(--radius);padding:15px 17px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
+  .lot .who2{display:flex;align-items:center;gap:12px}
+  .lot .sportdot{width:38px;height:38px;border-radius:8px;display:grid;place-items:center;
+    font-family:'Barlow Condensed';font-weight:700;font-size:11px;color:var(--ink)}
+  .lot .nminfo b{font-family:'Barlow Condensed';font-weight:700;font-size:17px;display:block;line-height:1.1}
+  .lot .nminfo small{color:var(--txt-faint);font-size:11px}
+  .lot .bidinfo{text-align:right}
+  .lot .bidinfo .cur{font-family:'Archivo';font-weight:800;font-size:20px;color:var(--accent)}
+  .lot .bidinfo .by{font-size:11px;color:var(--txt-faint)}
+  .lot .bidinfo .timer{font-family:'Barlow Condensed';font-weight:600;font-size:12px;color:var(--hot);
+    text-transform:uppercase;letter-spacing:1px;margin-top:3px}
+  .lot .act{display:flex;gap:7px;align-items:center;grid-column:1/-1;border-top:1px solid var(--line-soft);padding-top:12px;margin-top:2px}
+  .lot .act input{flex:1;background:var(--ink);border:1px solid var(--line);border-radius:5px;color:var(--txt);
+    padding:8px 11px;font-size:14px;font-family:'Inter'}
+  .lot .act input:focus{outline:none;border-color:var(--accent-2)}
+  .btn{background:var(--accent);color:var(--ink);border:none;border-radius:5px;cursor:pointer;
+    font-family:'Barlow Condensed';font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:13px;padding:9px 18px}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:transparent;color:var(--txt-dim);border:1px solid var(--line)}
+  .btn.ghost:hover{color:var(--txt);border-color:var(--txt-dim)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .quickbid{background:var(--panel);border:1px solid var(--line);color:var(--txt-dim);border-radius:5px;
+    padding:8px 12px;font-size:12px;cursor:pointer;font-weight:600}
+  .quickbid:hover{border-color:var(--accent-2);color:var(--txt)}
+  .aside{position:sticky;top:80px;display:flex;flex-direction:column;gap:14px}
+  .panelbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .panelbox h4{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
+    color:var(--txt-dim);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+  .bigstat{font-family:'Archivo';font-weight:900;font-size:34px;line-height:1}
+  .bigstat.cap{color:var(--accent-2)}
+  .bigstat small{display:block;font-family:'Inter';font-weight:500;font-size:12px;color:var(--txt-faint);margin-top:4px}
+  .meterrow{display:flex;justify-content:space-between;font-size:12px;color:var(--txt-dim);margin:14px 0 5px}
+  .meter{height:8px;background:var(--ink);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .meter i{display:block;height:100%;background:linear-gradient(90deg,var(--accent-2),var(--accent))}
+  .feed{display:flex;flex-direction:column;gap:9px;max-height:230px;overflow:auto}
+  .feed .fitem{font-size:12px;color:var(--txt-dim);display:flex;gap:8px;line-height:1.4}
+  .feed .fitem b{color:var(--txt);font-weight:600}
+  .feed .fitem .t{color:var(--txt-faint);margin-left:auto;white-space:nowrap}
+
+  /* ---------- Top available ---------- */
+  .avail-controls{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+  select.lg{background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:5px;
+    padding:8px 12px;font-family:'Inter';font-size:13px;cursor:pointer}
+  .availtable{width:100%;border-collapse:collapse;font-size:13px}
+  .availtable th{background:var(--panel-2);text-align:left;padding:10px 13px;font-family:'Barlow Condensed';
+    text-transform:uppercase;letter-spacing:1px;font-size:11px;color:var(--txt-dim);cursor:pointer;border-bottom:1px solid var(--line)}
+  .availtable td{padding:11px 13px;border-bottom:1px solid var(--line-soft)}
+  .availtable tr:hover{background:rgba(58,214,199,.04)}
+  .availtable .pn b{font-weight:600}
+  .availtable .pn small{display:block;color:var(--txt-faint);font-size:11px}
+  .availtable .num{font-family:'Archivo';font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+  .availtable .proj{color:var(--accent)}
+  .tagsport{display:inline-block;font-family:'Barlow Condensed';font-weight:600;font-size:10px;
+    text-transform:uppercase;letter-spacing:1px;color:var(--ink);padding:2px 7px;border-radius:3px}
+  .wrapcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+
+  /* ---------- Draft Board ---------- */
+  .draft-controls{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .draft-controls .seg{flex-wrap:wrap}
+  .draft-controls .seg button{font-size:11px;padding:6px 11px}
+  #draftboard{border-collapse:separate;border-spacing:0;width:100%;font-size:12px}
+  #draftboard thead th{
+    background:var(--panel-2);position:sticky;top:0;z-index:5;
+    font-family:'Barlow Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.8px;
+    font-size:11px;color:var(--txt-dim);padding:9px 6px;text-align:center;
+    border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  #draftboard thead th.rnd{position:sticky;left:0;z-index:6;text-align:center;width:54px;
+    background:var(--panel-2);border-right:1px solid var(--line)}
+  #draftboard thead th .mgr-h{display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.1}
+  #draftboard thead th .mgr-h .av{width:22px;height:22px;border-radius:4px;display:grid;place-items:center;
+    font-family:'Archivo';font-weight:800;font-size:9px;color:var(--ink)}
+  #draftboard td{padding:0;border-bottom:1px solid var(--line-soft);border-right:1px solid var(--line-soft)}
+  #draftboard td.rnd{position:sticky;left:0;z-index:2;background:var(--panel);text-align:center;
+    font-family:'Archivo';font-weight:800;font-size:13px;color:var(--txt-faint);
+    border-right:1px solid var(--line)}
+  .pick{display:block;padding:7px 8px;min-height:46px;position:relative;cursor:default;
+    transition:background .12s, opacity .12s}
+  .pick .pno{position:absolute;top:3px;right:5px;font-family:'Barlow Condensed';font-size:9px;
+    color:var(--txt-faint);font-weight:600}
+  .pick .pnm{font-weight:600;font-size:12px;line-height:1.15;color:var(--txt);display:block;margin-top:6px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pick .pmeta{font-size:10px;color:var(--txt-dim);display:flex;align-items:center;gap:4px;margin-top:2px}
+  .pick .sdot{width:6px;height:6px;border-radius:50%;flex:none}
+  .pick:hover{background:rgba(58,214,199,.08)}
+  #draftboard tr:hover td.rnd{color:var(--accent)}
+  .pick.dim{opacity:.16}
+  .pick.hot{box-shadow:inset 0 0 0 1px var(--accent-2)}
+  .pick.mine{background:rgba(255,210,63,.07)}
+  .pick.mine:hover{background:rgba(255,210,63,.13)}
+
+  /* footer note */
+  .protonote{margin-top:24px;text-align:center;color:var(--txt-faint);font-size:11px;
+    font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:2px}
+
+  @media (max-width:1100px){
+    .auc-layout{grid-template-columns:1fr}
+    .rules-layout{grid-template-columns:1fr}
+    .rule-tabs{flex-direction:row;flex-wrap:wrap;position:static}
+    .leaders{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand" onclick="showView('standings')">
+      <span class="mark">GAIL</span>
+      <span class="full">Great American Inter-League</span>
+    </div>
+    <nav class="tabs">
+      <button class="active" data-view="standings" onclick="showView('standings')">Standings</button>
+      <button data-view="roster" onclick="showView('roster')">Roster</button>
+      <button data-view="scoring" onclick="showView('scoring')">Scoring</button>
+      <button data-view="auction" onclick="showView('auction')">Auction</button>
+      <button data-view="available" onclick="showView('available')">Top Available</button>
+      <button data-view="draft" onclick="showView('draft')">Draft Board</button>
+    </nav>
+    <div class="topbar-right">
+      <div class="potpill">
+        <span class="lab">Prize Pot</span>
+        <span class="val" id="potTop">$4,820</span>
+      </div>
+      <div class="me-chip">
+        <div class="av">ZC</div>
+        <div class="nm">Zac C.<small>Carolina Crossover</small></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ============ STANDINGS ============ -->
+  <section class="view active" id="standings">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Season 1 · Week 14 of ~60</div>
+        <h1>League Standings</h1>
+      </div>
+      <div class="sub">Eleven lanes — ten sports plus Team Success — each rank managers 1st to 12th and pay out ladder points (12 down to 1). Max possible: 132.</div>
+    </div>
+
+    <div class="leaders" id="leaders"></div>
+
+    <div class="controls">
+      <div class="seg" id="cellMode">
+        <button class="active" data-mode="ladder">Ladder pts</button>
+        <button data-mode="native">Native score</button>
+      </div>
+      <span class="hint">Click a column header to sort by that lane · click a manager to expand</span>
+    </div>
+
+    <div class="tablewrap">
+      <table id="matrix">
+        <thead id="matrixHead"></thead>
+        <tbody id="matrixBody"></tbody>
+      </table>
+    </div>
+    <div class="protonote">Prototype · seeded with sample data</div>
+  </section>
+
+  <!-- ============ ROSTER ============ -->
+  <section class="view" id="roster">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Carolina Crossover · Zac C.</div>
+        <h1>My Roster</h1>
+      </div>
+      <div class="sub">Your active players by sport. Individual lanes score regular-season native stats; postseason value lives in the Team Success lane.</div>
+    </div>
+    <div class="sportnav" id="sportNav"></div>
+    <div class="roster-head" id="rosterHead"></div>
+    <div id="rosterCards"></div>
+    <div class="protonote">Prototype · seeded with sample data</div>
+  </section>
+
+  <!-- ============ SCORING ============ -->
+  <section class="view" id="scoring">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">The Rulebook</div>
+        <h1>How GAIL Is Scored</h1>
+      </div>
+      <div class="sub">Each lane uses its sport's own native fantasy format, then your finish converts to a universal ladder.</div>
+    </div>
+    <div class="rules-layout">
+      <div class="rule-tabs" id="ruleTabs"></div>
+      <div class="rule-content" id="ruleContent"></div>
+    </div>
+  </section>
+
+  <!-- ============ AUCTION ============ -->
+  <section class="view" id="auction">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Monthly Open Auction · June · closes in 3 days</div>
+        <h1>Free Agent Auction</h1>
+      </div>
+      <div class="sub">Real-money open bidding on free agents only. Winning bids feed the prize pot. You may add up to your monthly acquisition cap.</div>
+    </div>
+    <div class="auc-layout">
+      <div class="lots" id="lots"></div>
+      <div class="aside">
+        <div class="panelbox">
+          <h4>Your Standing</h4>
+          <div class="bigstat cap" id="capLeft">$155<small>of $200 monthly cap remaining</small></div>
+          <div class="meterrow"><span>Acquisition cap used</span><span id="capPct">23%</span></div>
+          <div class="meter"><i id="capBar" style="width:23%"></i></div>
+          <div class="meterrow"><span>Pickups this month</span><span id="pickCount">1 of 4</span></div>
+          <div class="meter"><i style="width:25%"></i></div>
+        </div>
+        <div class="panelbox">
+          <h4>Prize Pot <span style="color:var(--accent-2);font-family:Archivo;font-weight:800" id="potSide">$4,820</span></h4>
+          <div class="hint" style="margin-bottom:10px">Every winning bid is added to the season payout.</div>
+          <div class="feed" id="aucFeed"></div>
+        </div>
+      </div>
+    </div>
+    <div class="protonote">Prototype · bids are simulated</div>
+  </section>
+
+  <!-- ============ TOP AVAILABLE ============ -->
+  <section class="view" id="available">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Free Agent Pool</div>
+        <h1>Top Available</h1>
+      </div>
+      <div class="sub">The best unrostered players across every lane. Sort, filter by sport, and line up your auction targets.</div>
+    </div>
+    <div class="avail-controls">
+      <select class="lg" id="availSport"></select>
+      <span class="hint">Click a column to sort</span>
+    </div>
+    <div class="wrapcard">
+      <table class="availtable" id="availTable">
+        <thead id="availHead"></thead>
+        <tbody id="availBody"></tbody>
+      </table>
+    </div>
+    <div class="protonote">Prototype · seeded with sample data</div>
+  </section>
+
+  <!-- ============ DRAFT BOARD ============ -->
+  <section class="view" id="draft">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">August 2026 · Inaugural Draft · Snake · all sports</div>
+        <h1>Draft Board</h1>
+      </div>
+      <div class="sub">One mixed-sport snake draft seeded the league. Order serpentines each round — 1 through 12, then 12 back to 1. Filter by sport to trace where the talent went.</div>
+    </div>
+    <div class="draft-controls">
+      <div class="seg" id="draftFilter"></div>
+      <span class="hint" id="draftHint">Highlighting all picks · hover a pick for detail</span>
+    </div>
+    <div class="tablewrap" id="draftWrap">
+      <table id="draftboard">
+        <thead id="draftHead"></thead>
+        <tbody id="draftBody"></tbody>
+      </table>
+    </div>
+    <div class="protonote">Prototype · first 15 rounds shown · full draft runs 51 rounds</div>
+  </section>
+</main>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const LANES = [
+  {key:'nfl', label:'NFL',  fmt:'PPR',            color:'#6f8cff'},
+  {key:'nba', label:'NBA',  fmt:'Standard 9-cat', color:'#ff8a3d'},
+  {key:'nhl', label:'NHL',  fmt:'Standard',       color:'#5fd0ff'},
+  {key:'mlb', label:'MLB',  fmt:'Standard 5x5',   color:'#46d17f'},
+  {key:'wnba',label:'WNBA', fmt:'Standard',       color:'#ff6fb1'},
+  {key:'pga', label:'PGA',  fmt:'FedExCup pts',   color:'#9ddb46'},
+  {key:'atp', label:'ATP',  fmt:'Race standings', color:'#3ad6c7'},
+  {key:'wta', label:'WTA',  fmt:'Race standings', color:'#c79dff'},
+  {key:'epl', label:'EPL',  fmt:'FPL',            color:'#ff5a52'},
+  {key:'ufc', label:'UFC',  fmt:'Per-fight pts',  color:'#ffd23f'},
+  {key:'team',label:'TEAM', fmt:'Title ladder',   color:'#f4f1ea'},
+];
+
+const MGRS = [
+  {id:1, name:'Zac C.',     team:'Carolina Crossover', me:true,  c1:'#3ad6c7',c2:'#2b8fd6'},
+  {id:2, name:'Marcus D.',  team:'Brooklyn Bricks',    c1:'#ff8a3d',c2:'#ff5a52'},
+  {id:3, name:'Priya N.',   team:'Atlas Allstars',     c1:'#c79dff',c2:'#6f8cff'},
+  {id:4, name:'Tomás R.',   team:'Gulf Coast Galaxy',  c1:'#46d17f',c2:'#3ad6c7'},
+  {id:5, name:'Devon W.',   team:'Steel City Surge',   c1:'#5fd0ff',c2:'#6f8cff'},
+  {id:6, name:'Hana K.',    team:'Pacific Pulse',      c1:'#ff6fb1',c2:'#c79dff'},
+  {id:7, name:'Owen B.',    team:'Highland Hawks',     c1:'#9ddb46',c2:'#46d17f'},
+  {id:8, name:'Liang Z.',   team:'Capital Crowns',     c1:'#ffd23f',c2:'#ff8a3d'},
+  {id:9, name:'Sofia M.',   team:'Desert Mirage',      c1:'#ff5a52',c2:'#ff6fb1'},
+  {id:10,name:'Eli T.',     team:'North Star FC',      c1:'#6f8cff',c2:'#5fd0ff'},
+  {id:11,name:'Grace O.',   team:'Bayou Bandits',      c1:'#3ad6c7',c2:'#9ddb46'},
+  {id:12,name:'Ravi P.',    team:'Summit Syndicate',   c1:'#c79dff',c2:'#ff6fb1'},
+];
+
+// deterministic pseudo-random so layout is stable
+function seeded(n){let x=Math.sin(n*999.13)*10000;return x-Math.floor(x);}
+
+// Build a lane: assign each manager a finishing rank 1..12 -> ladder pts 13-rank
+// Each lane gets its own permutation. Native score shown is illustrative.
+const NATIVE_RANGES = {
+  nfl:[1450,2350], nba:[1200,2100], nhl:[900,1600], mlb:[1100,1900],
+  wnba:[700,1300], pga:[800,3200], atp:[1500,8200], wta:[1500,8200],
+  epl:[1400,2600], ufc:[42,118], team:[8,96]
+};
+
+function buildStandings(){
+  const data = {}; // laneKey -> mgrId -> {rank, lp, native, won}
+  LANES.forEach((lane,li)=>{
+    // permutation of managers for this lane
+    const order = MGRS.map(m=>m.id).sort((a,b)=> seeded(a*7+li*131) - seeded(b*7+li*131));
+    data[lane.key]={};
+    const [lo,hi]=NATIVE_RANGES[lane.key];
+    order.forEach((mid,idx)=>{
+      const rank=idx+1;            // 1 = best
+      const lp=13-rank;            // ladder points 12..1
+      const frac=(12-idx)/11;      // best gets ~1
+      const native=Math.round(lo+(hi-lo)*frac + (seeded(mid*li+3)*0.06*(hi-lo)));
+      data[lane.key][mid]={rank,lp,native,won:rank===1};
+    });
+  });
+  // totals
+  const totals=MGRS.map(m=>{
+    let t=0,wins=0;
+    LANES.forEach(l=>{t+=data[l.key][m.id].lp; if(data[l.key][m.id].won)wins++;});
+    return {...m,total:t,wins};
+  }).sort((a,b)=> b.total-a.total || b.wins-a.wins);
+  totals.forEach((m,i)=>m.pos=i+1);
+  // fake last-week movement
+  totals.forEach(m=>{ m.delta = Math.round((seeded(m.id*17)-0.5)*6); });
+  return {data,totals};
+}
+const STAND = buildStandings();
+
+/* ---------- ROSTER DATA ---------- */
+/* Each sport defines `cols` (the box-score stats that matter, ESPN-style) and a
+   `total` label. Players carry a `s` object of those stat values plus `fp`
+   (season fantasy points) so the grid shows stats → total like ESPN. */
+const ROSTER = {
+  nfl:{slots:['QB','RB','RB','WR','WR','TE','FLEX'],total:'PPR PTS',
+    cols:[['pyd','PASS YD'],['ptd','P TD'],['ryd','RUSH YD'],['rtd','R TD'],['rec','REC'],['recyd','REC YD'],['td','REC TD'],['to','TO']],
+    players:[
+    {n:'Jalen Carter',meta:'QB · PHI', s:{pyd:4218,ptd:31,ryd:402,rtd:5,rec:0,recyd:0,td:0,to:11},fp:341.6},
+    {n:'Breece Sailor',meta:'RB · NYJ',s:{pyd:0,ptd:0,ryd:1284,rtd:11,rec:52,recyd:388,td:2,to:3},fp:298.2},
+    {n:'Kendrick Vaughn',meta:'RB · DET',s:{pyd:0,ptd:0,ryd:1003,rtd:8,rec:44,recyd:310,td:1,to:2},fp:241.3},
+    {n:'Theo Lambert',meta:'WR · MIN',s:{pyd:0,ptd:0,ryd:0,rtd:0,rec:94,recyd:1322,td:9,to:1},fp:280.2},
+    {n:'Marcus Reed',meta:'WR · SEA',s:{pyd:0,ptd:0,ryd:18,rtd:0,rec:71,recyd:998,td:6,to:0},fp:208.6},
+    {n:'Dax Holloway',meta:'TE · KC',s:{pyd:0,ptd:0,ryd:0,rtd:0,rec:66,recyd:742,td:5,to:1},fp:170.2},
+    {n:'Isaiah Pruitt',meta:'FLEX · LV',s:{pyd:0,ptd:0,ryd:512,rtd:3,rec:38,recyd:402,td:2,to:2},fp:149.4},
+  ]},
+  nba:{slots:['G','G','F','F','C','UTIL'],total:'FPTS/G',
+    cols:[['pts','PTS'],['reb','REB'],['ast','AST'],['stl','STL'],['blk','BLK'],['tpm','3PM'],['to','TO'],['fgp','FG%']],
+    players:[
+    {n:'Andre Maxwell',meta:'PG · DAL',s:{pts:28.4,reb:5.1,ast:9.2,stl:1.8,blk:0.4,tpm:3.1,to:3.2,fgp:'.471'},fp:51.2},
+    {n:'Quentin Ross',meta:'SG · MIA',s:{pts:24.0,reb:4.6,ast:4.1,stl:1.3,blk:0.5,tpm:3.4,to:2.0,fgp:'.455'},fp:44.8},
+    {n:'Bojan Petrović',meta:'SF · DEN',s:{pts:21.2,reb:7.8,ast:5.5,stl:1.1,blk:0.9,tpm:1.9,to:2.3,fgp:'.503'},fp:47.6},
+    {n:'Tyrell Banks',meta:'PF · OKC',s:{pts:18.6,reb:8.4,ast:2.2,stl:1.0,blk:1.4,tpm:0.8,to:1.8,fgp:'.541'},fp:42.1},
+    {n:'Malik Osei',meta:'C · SAC',s:{pts:19.1,reb:11.2,ast:3.0,stl:0.7,blk:2.1,tpm:0.2,to:2.4,fgp:'.612'},fp:49.0},
+    {n:'Cole Whitaker',meta:'UTIL · ORL',s:{pts:15.3,reb:5.9,ast:3.8,stl:1.2,blk:0.6,tpm:1.7,to:1.5,fgp:'.448'},fp:33.5},
+  ]},
+  nhl:{slots:['F','F','F','D','D','G'],total:'FPTS',
+    cols:[['g','G'],['a','A'],['sog','SOG'],['pm','+/-'],['ppp','PPP'],['blk','BLK'],['w','W'],['sv','SV']],
+    players:[
+    {n:'Viktor Lindholm',meta:'C · COL',s:{g:38,a:50,sog:241,pm:18,ppp:31,blk:22,w:0,sv:0},fp:412},
+    {n:'Sam Beaulieu',meta:'LW · TBL',s:{g:31,a:43,sog:208,pm:11,ppp:26,blk:18,w:0,sv:0},fp:341},
+    {n:'Niko Rautio',meta:'RW · EDM',s:{g:29,a:40,sog:196,pm:9,ppp:24,blk:15,w:0,sv:0},fp:318},
+    {n:'Garrett Pope',meta:'D · CAR',s:{g:12,a:39,sog:144,pm:21,ppp:19,blk:121,w:0,sv:0},fp:286},
+    {n:'Anton Maček',meta:'D · NYR',s:{g:9,a:37,sog:121,pm:14,ppp:17,blk:138,w:0,sv:0},fp:264},
+    {n:'Lucas Frost',meta:'G · VGK',s:{g:0,a:1,sog:0,pm:0,ppp:0,blk:0,w:34,sv:1408},fp:438},
+  ]},
+  mlb:{slots:['IF','IF','OF','OF','UTIL','SP','RP'],total:'FPTS',
+    cols:[['tb','TB'],['r','R'],['rbi','RBI'],['bb','BB'],['sb','SB'],['k','K'],['ip','IP'],['w','W'],['sv','SV']],
+    players:[
+    {n:'Diego Salazar',meta:'2B · LAD',s:{tb:268,r:96,rbi:78,bb:64,sb:24,k:108,ip:0,w:0,sv:0},fp:322},
+    {n:'Trey Donovan',meta:'SS · ATL',s:{tb:301,r:104,rbi:96,bb:51,sb:11,k:142,ip:0,w:0,sv:0},fp:321},
+    {n:'Kai Yamamoto',meta:'OF · NYY',s:{tb:244,r:88,rbi:61,bb:47,sb:42,k:131,ip:0,w:0,sv:0},fp:291},
+    {n:'Brennan Cole',meta:'OF · HOU',s:{tb:286,r:91,rbi:99,bb:55,sb:6,k:158,ip:0,w:0,sv:0},fp:279},
+    {n:'Marco Iannucci',meta:'UTIL · SD',s:{tb:252,r:79,rbi:84,bb:43,sb:9,k:121,ip:0,w:0,sv:0},fp:246},
+    {n:'Walker Hendrix',meta:'SP · SEA',s:{tb:0,r:0,rbi:0,bb:42,sb:0,k:214,ip:192,w:15,sv:0},fp:686},
+    {n:'Jonah Pike',meta:'RP · MIL',s:{tb:0,r:0,rbi:0,bb:18,sb:0,k:78,ip:64,w:4,sv:34},fp:392},
+  ]},
+  wnba:{slots:['G','G','F','F','UTIL'],total:'FPTS/G',
+    cols:[['pts','PTS'],['reb','REB'],['ast','AST'],['stl','STL'],['blk','BLK'],['tpm','3PM'],['to','TO']],
+    players:[
+    {n:'Imani Brooks',meta:'G · LV',s:{pts:21.8,reb:3.9,ast:6.4,stl:1.9,blk:0.3,tpm:2.6,to:2.7},fp:39.1},
+    {n:'Tara Nilsson',meta:'G · NY',s:{pts:18.2,reb:4.1,ast:5.1,stl:1.4,blk:0.4,tpm:2.9,to:2.1},fp:34.6},
+    {n:'Destiny Vaughn',meta:'F · SEA',s:{pts:20.4,reb:9.1,ast:2.8,stl:1.1,blk:1.6,tpm:0.9,to:2.3},fp:41.0},
+    {n:'Lena Hartwell',meta:'F · CONN',s:{pts:16.6,reb:8.0,ast:2.2,stl:0.9,blk:1.2,tpm:1.1,to:1.8},fp:36.2},
+    {n:'Rosa Delgado',meta:'UTIL · PHX',s:{pts:12.9,reb:5.2,ast:4.0,stl:1.0,blk:0.5,tpm:1.4,to:1.6},fp:28.4},
+  ]},
+  pga:{slots:['Golfer','Golfer','Golfer','Golfer'],total:'FEDEX PTS',
+    cols:[['evt','EVENTS'],['win','WINS'],['t10','TOP 10'],['cuts','CUTS MADE'],['scr','SCORING AVG']],
+    players:[
+    {n:'Cameron Pike',meta:'World #6',s:{evt:21,win:2,t10:9,cuts:19,scr:'69.4'},fp:2840},
+    {n:'Hugo Marchand',meta:'World #11',s:{evt:23,win:1,t10:7,cuts:20,scr:'69.9'},fp:2110},
+    {n:'Sung-min Park',meta:'World #18',s:{evt:22,win:1,t10:5,cuts:18,scr:'70.3'},fp:1760},
+    {n:'Beau Tanner',meta:'World #27',s:{evt:24,win:0,t10:4,cuts:19,scr:'70.6'},fp:1390},
+  ]},
+  atp:{slots:['Player','Player','Player'],total:'RACE PTS',
+    cols:[['m','MATCHES'],['w','WINS'],['titles','TITLES'],['sf','SF+'],['aces','ACES']],
+    players:[
+    {n:'Marin Kovač',meta:'ATP #4',s:{m:52,w:41,titles:3,sf:7,aces:612},fp:5120},
+    {n:'Lucas Fontaine',meta:'ATP #9',s:{m:48,w:33,titles:1,sf:4,aces:498},fp:3640},
+    {n:'Diego Ferro',meta:'ATP #15',s:{m:45,w:28,titles:1,sf:2,aces:387},fp:2480},
+  ]},
+  wta:{slots:['Player','Player','Player'],total:'RACE PTS',
+    cols:[['m','MATCHES'],['w','WINS'],['titles','TITLES'],['sf','SF+'],['aces','ACES']],
+    players:[
+    {n:'Aria Volkova',meta:'WTA #3',s:{m:54,w:44,titles:3,sf:8,aces:341},fp:5890},
+    {n:'Mei Tanaka',meta:'WTA #8',s:{m:49,w:35,titles:2,sf:5,aces:288},fp:3920},
+    {n:'Camila Rojas',meta:'WTA #14',s:{m:46,w:29,titles:1,sf:3,aces:201},fp:2640},
+  ]},
+  epl:{slots:['GK','DEF','DEF','MID','MID','FWD','FWD'],total:'FPL PTS',
+    cols:[['g','G'],['a','A'],['cs','CLEAN SH'],['bps','BONUS'],['mins','MINS']],
+    players:[
+    {n:'Olivier Bex',meta:'GK · ARS',s:{g:0,a:0,cs:14,bps:31,mins:3240},fp:142},
+    {n:'Reuben Castle',meta:'DEF · LIV',s:{g:4,a:6,cs:13,bps:38,mins:3150},fp:168},
+    {n:'Dmitri Volk',meta:'DEF · MCI',s:{g:2,a:5,cs:15,bps:29,mins:3060},fp:151},
+    {n:'Femi Adebayo',meta:'MID · TOT',s:{g:11,a:9,cs:8,bps:44,mins:3190},fp:204},
+    {n:'Caleb Murphy',meta:'MID · NEW',s:{g:9,a:12,cs:6,bps:40,mins:3110},fp:188},
+    {n:'Rafael Sá',meta:'FWD · CHE',s:{g:19,a:7,cs:0,bps:51,mins:3080},fp:221},
+    {n:'Stefan Brandt',meta:'FWD · AVL',s:{g:14,a:8,cs:0,bps:42,mins:2980},fp:176},
+  ]},
+  ufc:{slots:['Fighter','Fighter','Bench'],total:'BEST-2 PTS',
+    cols:[['rec','RECORD'],['fights','FIGHTS'],['fin','FINISHES'],['perf','PERF BONUS'],['oppm','OPP MULT']],
+    players:[
+    {n:'Damien Cross',meta:'LW',s:{rec:'14-2',fights:2,fin:2,perf:1,oppm:'×1.7'},fp:96},
+    {n:'Rashid Olawale',meta:'MW',s:{rec:'11-1',fights:2,fin:1,perf:1,oppm:'×1.5'},fp:88},
+    {n:'Petra Nilsen',meta:'BW · bench',s:{rec:'9-1',fights:1,fin:1,perf:0,oppm:'×1.3'},fp:54},
+  ]},
+};
+
+/* ---------- TOP AVAILABLE ---------- */
+const AVAIL = [
+  {sport:'nfl', n:'Roman Vega',   meta:'WR · CIN', own:0, proj:14.8, trend:'+3.2'},
+  {sport:'nfl', n:'Tyson Mabry',  meta:'RB · CLE', own:0, proj:13.1, trend:'+5.0'},
+  {sport:'nba', n:'Jaylen Pierce',meta:'SG · UTA', own:0, proj:38.5, trend:'+6.1'},
+  {sport:'nba', n:'Goran Mitić',  meta:'PF · IND', own:0, proj:33.2, trend:'-1.4'},
+  {sport:'nhl', n:'Erik Sandberg',meta:'C · BUF',  own:0, proj:0.84, trend:'+0.9'},
+  {sport:'mlb', n:'Caleb Ortiz',  meta:'OF · TEX', own:0, proj:9.6,  trend:'+2.7'},
+  {sport:'mlb', n:'Hideki Sato',  meta:'SP · BAL', own:0, proj:8.9,  trend:'+1.1'},
+  {sport:'wnba',n:'Asha Carver',  meta:'F · CHI',  own:0, proj:29.7, trend:'+4.4'},
+  {sport:'pga', n:'Liam Crowe',   meta:'World #34',own:0, proj:980,  trend:'+220'},
+  {sport:'atp', n:'Pavel Horák',  meta:'ATP #22',  own:0, proj:1640, trend:'+310'},
+  {sport:'wta', n:'Nadia Belikov',meta:'WTA #19',  own:0, proj:1880, trend:'+260'},
+  {sport:'epl', n:'Tariq Mensah', meta:'MID · BHA',own:0, proj:6.9,  trend:'+1.8'},
+  {sport:'epl', n:'Joel Andersson',meta:'FWD · WOL',own:0,proj:7.4,  trend:'+2.2'},
+  {sport:'ufc', n:'Bruno Vargas', meta:'LHW · 8-1',own:0, proj:46,   trend:'+12'},
+  {sport:'nba', n:'Tre Coleman',  meta:'PG · CHA', own:0, proj:31.0, trend:'+2.0'},
+  {sport:'nfl', n:'Dane Whitlock',meta:'TE · GB',  own:0, proj:9.2,  trend:'+1.6'},
+];
+
+/* ---------- RULES CONTENT ---------- */
+const RULES = [
+  {key:'overview', label:'Overview', body:`
+    <h3>One ladder, eleven lanes</h3>
+    <p>GAIL spans ten pro sports plus a Team Success lane. Comparing raw fantasy points across, say, a FedExCup season and a UFC card is meaningless — so GAIL never does. Instead, each lane ranks all 12 managers by their native fantasy result, and that <b>finish</b> is what scores.</p>
+    <div class="callout">Finishing <b>1st</b> in a lane pays <b>12</b> ladder points. <b>2nd</b> pays 11, on down to <b>1</b> point for last. With 11 lanes, the theoretical max is <b>132</b>.</div>
+    <p>Your overall GAIL rank is simply the sum of your ladder points across all eleven lanes. Win a lot of lanes outright and you climb; finish mid-pack everywhere and you'll hover in the middle.</p>
+    <p>Team sports score <b>regular-season native stats only</b> in their individual lanes. Postseason heroics are captured separately and exclusively in the Team Success lane, so nothing is double-counted. EPL is the one carve-out — with no playoff bracket, its full season counts in-lane.</p>`},
+  {key:'ladder', label:'Ladder & ties', body:`
+    <h3>How finish becomes points</h3>
+    <div class="ladder" id="ladderViz"></div>
+    <p>Ties inside a lane are broken by sport-specific box-score stats — e.g. NFL breaks on most touchdowns, then fewest turnovers; MLB on most HR+SB, then batting average; UFC on most finishes, then best single-fight score. Overall standing ties break in favor of the manager who <b>won more lanes outright</b>.</p>`},
+  {key:'team', label:'Team Success', body:`
+    <h3>The Team Success lane</h3>
+    <p>This lane rewards backing real teams and individuals that go deep. Bonuses are scarcity-scaled — the governing principle is that <b>two majors equal one Super Bowl</b> in value.</p>
+    <table class="scoretable"><thead><tr><th>Achievement</th><th>Bonus</th></tr></thead><tbody>
+      <tr><td>League championship (Super Bowl, etc.)</td><td>+16</td></tr>
+      <tr><td>UFC title win</td><td>+12</td></tr>
+      <tr><td>Golf major / tennis Grand Slam</td><td>+8</td></tr>
+      <tr><td>Regular tour title</td><td>+4</td></tr>
+    </tbody></table>
+    <div class="callout">Stage bonuses (conference finals, semifinal runs, etc.) scale proportionally beneath each title tier, so a deep run still pays even without the trophy.</div>`},
+  {key:'ufc', label:'UFC lane', body:`
+    <h3>UFC — built for thin samples</h3>
+    <p>Fighters compete a handful of times a year, so a standard fantasy mold doesn't fit. GAIL scores each manager's <b>best two fights</b> in the window, and rosters carry two fighters plus a mandatory bench fighter for depth.</p>
+    <table class="scoretable"><thead><tr><th>Component</th><th>Points</th></tr></thead><tbody>
+      <tr><td>Win / Loss / Draw (base)</td><td>+10 / 0 / +4</td></tr>
+      <tr><td>Method bonus — KO/TKO</td><td>+6</td></tr>
+      <tr><td>Method bonus — Submission</td><td>+6</td></tr>
+      <tr><td>Performance bonus (POTN / FOTN)</td><td>+4</td></tr>
+      <tr><td>Opponent-quality multiplier</td><td>×1.0 – ×2.0</td></tr>
+    </tbody></table>
+    <p>The opponent multiplier scales the whole fight score, so beating a ranked contender is worth far more than padding a record against a debutant.</p>`},
+  {key:'market', label:'In-season market', body:`
+    <h3>Auctions & trades</h3>
+    <p>Once a month, free agents go to a real-money open auction. Bids are capped by a monthly acquisition limit, and every winning bid is added to the season prize pot. You can't auction a rostered player — only the free agent pool is live.</p>
+    <div class="callout">Manager-to-manager <b>trades</b> are mutual and subject to a majority-league veto window, which guards against collusion before any deal locks in.</div>`},
+];
+
+/* Per-sport scoring. NFL/NBA/NHL/MLB use ESPN's published default values
+   (sourced from ESPN Fan Support + ESPN fantasy 101 guides). PGA/ATP/WTA/EPL/UFC
+   use each platform's native format, labeled by source. */
+function scoreRows(rows){
+  return `<table class="scoretable"><thead><tr><th>Category</th><th>Points</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table>`;
+}
+const SPORT_SCORING = {
+  nfl:{src:'ESPN default · PPR', note:'regular',
+    rows:[['Passing yards','1 per 25'],['Passing TD','+4'],['Interception thrown','−2'],
+      ['Rushing / receiving yards','1 per 10'],['Rushing / receiving TD','+6'],
+      ['Reception (PPR)','+1'],['2-pt conversion','+2'],['Fumble lost','−2']]},
+  nba:{src:'ESPN default · points league', note:'regular',
+    rows:[['Point scored','+1'],['Field goal made','+2'],['Field goal attempted','−1'],
+      ['Three-pointer made','+1'],['Free throw made','+1'],['Free throw attempted','−1'],
+      ['Rebound','+1'],['Assist','+2'],['Steal','+4'],['Block','+4'],['Turnover','−2']]},
+  nhl:{src:'ESPN default', note:'regular',
+    rows:[['Goal','+3'],['Assist','+2'],['Shot on goal','+0.5'],['Plus/minus','+1 / −1'],
+      ['Power-play point','+0.5'],['Block','+0.5'],['Goalie win','+4'],['Save','+0.2'],
+      ['Goal against','−2'],['Shutout','+3'],['Overtime loss','+1']]},
+  mlb:{src:'ESPN default · points league', note:'regular',
+    rows:[['Total base','+1'],['Run scored','+1'],['RBI','+1'],['Walk','+1'],['Stolen base','+1'],
+      ['Strikeout (batter)','−1'],['Inning pitched','+3'],['Strikeout (pitcher)','+1'],
+      ['Win','+5'],['Save','+5'],['Loss','−5'],['Earned run','−2'],['Hit allowed','−1'],['Walk issued','−1']]},
+  wnba:{src:'ESPN-style points (mirrors NBA)', note:'regular',
+    rows:[['Point scored','+1'],['Field goal made','+2'],['Field goal attempted','−1'],
+      ['Three-pointer made','+1'],['Free throw made','+1'],['Free throw attempted','−1'],
+      ['Rebound','+1'],['Assist','+2'],['Steal','+4'],['Block','+4'],['Turnover','−2']]},
+  pga:{src:'PGA Tour FedExCup points', note:'none',
+    rows:[['Tournament win','500 (700 majors / signature)'],['Runner-up','300'],['Top 10 finish','sliding scale'],
+      ['Made cut','min. points awarded'],['Missed cut','0'],['FedExCup Playoffs','points multiplied']]},
+  atp:{src:'ATP Race to Turin points', note:'none',
+    rows:[['Grand Slam win','2,000'],['ATP Masters 1000 win','1,000'],['ATP 500 win','500'],
+      ['ATP 250 win','250'],['Runner-up / SF / QF','proportional scale'],['First-round loss','0–10']]},
+  wta:{src:'WTA Race to the Finals points', note:'none',
+    rows:[['Grand Slam win','2,000'],['WTA 1000 win','1,000'],['WTA 500 win','500'],
+      ['WTA 250 win','250'],['Runner-up / SF / QF','proportional scale'],['First-round loss','0–10']]},
+  epl:{src:'Fantasy Premier League (FPL)', note:'epl',
+    rows:[['Playing up to 60 min','+1'],['Playing 60+ min','+2'],['Goal (GK/DEF)','+6'],
+      ['Goal (MID)','+5'],['Goal (FWD)','+4'],['Assist','+3'],['Clean sheet (GK/DEF)','+4'],
+      ['Every 3 saves (GK)','+1'],['Penalty save','+5'],['Yellow card','−1'],['Red card','−3'],
+      ['Own goal','−2'],['Bonus points','+1 to +3']]},
+  ufc:{src:'GAIL custom · best-2 fights', note:'none',
+    rows:[['Win (base)','+10'],['Draw','+4'],['Loss','0'],['KO/TKO bonus','+6'],
+      ['Submission bonus','+6'],['Performance / Fight of the Night','+4'],
+      ['Opponent-quality multiplier','×1.0 – ×2.0 (whole fight)']]},
+};
+const SPORT_RULES = LANES.filter(l=>l.key!=='team').map(l=>{
+  const sc=SPORT_SCORING[l.key];
+  let note='';
+  if(sc.note==='epl') note='<div class="callout">EPL is exempt from the regular-season-only rule — with no playoff bracket, the entire FPL season counts in this lane.</div>';
+  else if(sc.note==='regular') note='<div class="callout">Regular season only. Any postseason value for these players is scored in the <b>Team Success</b> lane.</div>';
+  return {key:l.key, label:l.label, body:`
+    <h3>${l.label} — ${l.fmt}</h3>
+    <p>Managers are ranked 1st–12th on their season-long ${l.label} result under the scoring below, and that finish converts to ladder points like every other lane. <span style="color:var(--txt-faint)">Source: ${sc.src}.</span></p>
+    ${scoreRows(sc.rows)}
+    ${note}`};
+});
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+
+function initials(name){return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+
+/* ----- view switching ----- */
+function showView(v){
+  $$('.view').forEach(el=>el.classList.toggle('active',el.id===v));
+  $$('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* ----- standings leaders ----- */
+function renderLeaders(){
+  const top3=STAND.totals.slice(0,3);
+  $('#leaders').innerHTML=top3.map((m,i)=>`
+    <div class="leader r${i+1}">
+      <div class="rk">${i+1}</div>
+      <div class="nm">${m.name}</div>
+      <div class="team">${m.team} · ${m.wins} lane${m.wins!==1?'s':''} won</div>
+      <div class="pts">${m.total}<small>/ 132 pts</small></div>
+      <div class="delta ${m.delta>0?'up':m.delta<0?'down':'flat'}">
+        ${m.delta>0?'▲ +'+m.delta:m.delta<0?'▼ '+m.delta:'– even'} this week
+      </div>
+    </div>`).join('');
+}
+
+/* ----- matrix ----- */
+let sortLane='total', sortDir=-1, cellMode='ladder';
+function renderMatrix(){
+  // header
+  let head='<tr><th class="mgr" onclick="setSort(\'total\')">Manager</th>';
+  LANES.forEach(l=>{
+    head+=`<th class="${sortLane===l.key?'sorted':''}" style="border-top:2px solid ${l.color}"
+      onclick="setSort('${l.key}')">${l.label}${sortLane===l.key?`<span class="arrow">${sortDir<0?'▼':'▲'}</span>`:''}</th>`;
+  });
+  head+=`<th class="tot ${sortLane==='total'?'sorted':''}" onclick="setSort('total')">TOTAL${sortLane==='total'?`<span class="arrow">${sortDir<0?'▼':'▲'}</span>`:''}</th></tr>`;
+  $('#matrixHead').innerHTML=head;
+
+  // sort managers
+  let rows=[...STAND.totals];
+  rows.sort((a,b)=>{
+    let av,bv;
+    if(sortLane==='total'){av=a.total;bv=b.total;}
+    else{av=STAND.data[sortLane][a.id].lp;bv=STAND.data[sortLane][b.id].lp;}
+    return (av-bv)*sortDir || (a.total-b.total)*-1;
+  });
+
+  // body
+  let body='';
+  rows.forEach((m)=>{
+    body+=`<tr data-mid="${m.id}">
+      <td class="mgr" onclick="toggleDetail(${m.id})">
+        <div class="mgr-cell">
+          <span class="pos">${m.pos}</span>
+          <span class="av" style="background:linear-gradient(135deg,${m.c1},${m.c2})">${initials(m.name)}</span>
+          <span class="who"><b>${m.name}${m.me?' ★':''}</b><small>${m.team}</small></span>
+        </div>
+      </td>`;
+    LANES.forEach(l=>{
+      const c=STAND.data[l.key][m.id];
+      const intensity=(c.lp-1)/11; // 0..1
+      const bg=`rgba(255,210,63,${(0.04+intensity*0.30).toFixed(3)})`;
+      const show = cellMode==='ladder'
+        ? `<span class="lp">${c.lp}</span><span class="nat">#${c.rank}</span>`
+        : `<span class="lp" style="font-size:13px">${fmtNative(l.key,c.native)}</span><span class="nat">${c.lp} pt</span>`;
+      body+=`<td style="background:${bg}"><span class="cell">${c.won?'<span class="winmark"></span>':''}${show}</span></td>`;
+    });
+    body+=`<td class="totcol">${m.total}</td></tr>`;
+    body+=`<tr class="detail" id="det-${m.id}"><td colspan="${LANES.length+2}"><div class="detail-inner" id="detin-${m.id}"></div></td></tr>`;
+  });
+  $('#matrixBody').innerHTML=body;
+}
+function fmtNative(key,v){
+  if(key==='atp'||key==='wta'||key==='pga'||key==='epl') return v.toLocaleString();
+  if(key==='ufc'||key==='team') return v;
+  return v.toLocaleString();
+}
+function setSort(lane){
+  if(sortLane===lane){sortDir*=-1;}else{sortLane=lane;sortDir=-1;}
+  renderMatrix();
+}
+function toggleDetail(mid){
+  const row=$('#det-'+mid);
+  const open=row.classList.contains('open');
+  $$('.detail').forEach(r=>r.classList.remove('open'));
+  if(open)return;
+  const m=STAND.totals.find(x=>x.id===mid);
+  const inner=$('#detin-'+mid);
+  inner.innerHTML='<div class="detail-grid">'+LANES.map(l=>{
+    const c=STAND.data[l.key][mid];
+    return `<div class="lane-card">
+      <div class="ln">${l.label}<span class="lpos">${c.lp} pt</span></div>
+      <div class="lbar"><i style="width:${(c.lp/12*100)}%"></i></div>
+      <div class="lnat">${c.won?'🏆 ':''}Finish #${c.rank} · ${fmtNative(l.key,c.native)} ${l.fmt.split(' ')[0]}</div>
+    </div>`;
+  }).join('')+'</div>';
+  row.classList.add('open');
+}
+
+/* ----- roster ----- */
+let curSport='nfl';
+function renderSportNav(){
+  $('#sportNav').innerHTML=LANES.filter(l=>l.key!=='team').map(l=>`
+    <button class="${l.key===curSport?'active':''}" onclick="setSport('${l.key}')">
+      <span class="dot" style="background:${l.color}"></span>${l.label}
+    </button>`).join('');
+}
+function setSport(k){curSport=k;renderSportNav();renderRoster();}
+function renderRoster(){
+  const lane=LANES.find(l=>l.key===curSport);
+  const r=ROSTER[curSport];
+  const starters=r.players.filter((p,i)=>!isBenchRow(p,i));
+  const rosterTotal=starters.reduce((a,p)=>a+p.fp,0);
+  $('#rosterHead').innerHTML=`
+    <h2><span class="lanebadge">${lane.label}</span> ${r.players.length} players</h2>
+    <span class="fmt">Scoring: ${lane.fmt} · starters total <b style="color:var(--accent)">${fmtFp(rosterTotal)}</b> ${r.total.toLowerCase()}</span>`;
+
+  let head='<tr><th class="rl-slot">Slot</th><th class="rl-name">Player</th>';
+  r.cols.forEach(c=>head+=`<th class="rl-num">${c[1]}</th>`);
+  head+=`<th class="rl-tot">${r.total}</th></tr>`;
+
+  let body='';
+  r.players.forEach((p,i)=>{
+    const bench=isBenchRow(p,i);
+    body+=`<tr class="${bench?'rl-bench':''}">
+      <td class="rl-slot">${bench?'BN':(r.slots[i]||'BN')}</td>
+      <td class="rl-name"><b>${p.n}</b><small>${p.meta}</small></td>`;
+    r.cols.forEach(c=>{
+      const v=p.s[c[0]];
+      body+=`<td class="rl-num">${v===0?'<span class="z">0</span>':v}</td>`;
+    });
+    body+=`<td class="rl-tot">${fmtFp(p.fp)}</td></tr>`;
+  });
+  // roster total row (starters only)
+  body+=`<tr class="rl-sum"><td></td><td class="rl-name"><b>Starters total</b><small>bench excluded from lane scoring</small></td>`;
+  r.cols.forEach(()=>body+='<td></td>');
+  body+=`<td class="rl-tot">${fmtFp(rosterTotal)}</td></tr>`;
+
+  $('#rosterCards').innerHTML=`<div class="wrapcard"><table class="rostertable">
+    <thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+}
+function isBenchRow(p,i){return (p.meta||'').includes('bench')||(curSport==='ufc'&&i===2);}
+function fmtFp(v){return Number.isInteger(v)?v.toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});}
+
+/* ----- scoring ----- */
+let curRule='overview';
+const ALL_RULES=[...RULES.slice(0,2), ...SPORT_RULES.slice(0,0)]; // keep core first
+function renderRuleTabs(){
+  const tabs=[...RULES, {sep:true}, ...SPORT_RULES];
+  $('#ruleTabs').innerHTML=tabs.map(t=> t.sep
+    ? '<div style="height:1px;background:var(--line);margin:8px 6px"></div>'
+    : `<button class="${t.key===curRule?'active':''}" onclick="setRule('${t.key}')">${t.label}</button>`
+  ).join('');
+}
+function setRule(k){curRule=k;renderRuleTabs();renderRuleContent();}
+function renderRuleContent(){
+  const all=[...RULES,...SPORT_RULES];
+  const r=all.find(x=>x.key===curRule);
+  $('#ruleContent').innerHTML=`<div class="rule-panel active">${r.body}</div>`;
+  if(curRule==='ladder')renderLadderViz();
+}
+function renderLadderViz(){
+  const el=$('#ladderViz');if(!el)return;
+  let h='';
+  for(let rank=1;rank<=12;rank++){
+    const lp=13-rank;
+    h+=`<div class="rung">
+      <span class="lab">${rank}${['st','nd','rd'][rank-1]||'th'} place</span>
+      <span class="track"><i style="width:${lp/12*100}%"></i></span>
+      <span class="v">${lp} pt${lp!==1?'s':''}</span>
+    </div>`;
+  }
+  el.innerHTML=h;
+}
+
+/* ----- auction ----- */
+let pot=4820, capLeft=155, capTotal=200, picks=1, pickMax=4;
+const LOTS=[
+  {id:'l1',sport:'nba',n:'Jaylen Pierce',meta:'SG · UTA · proj 38.5 fpts/g',cur:42,by:'Hana K.',mins:71},
+  {id:'l2',sport:'nfl',n:'Tyson Mabry', meta:'RB · CLE · proj 13.1 PPR',  cur:55,by:'Marcus D.',mins:71},
+  {id:'l3',sport:'ufc',n:'Bruno Vargas',meta:'LHW · 8-1 · ranked #12',     cur:28,by:'you',mins:71},
+  {id:'l4',sport:'mlb',n:'Hideki Sato', meta:'SP · BAL · 2.61 ERA',        cur:33,by:'Owen B.',mins:71},
+  {id:'l5',sport:'epl',n:'Joel Andersson',meta:'FWD · WOL · 7.4 FPL/gw',   cur:19,by:'Sofia M.',mins:71},
+];
+const FEED=[
+  {who:'Hana K.',act:'bid $42 on Jaylen Pierce',t:'2m'},
+  {who:'You',act:'lead Bruno Vargas at $28',t:'8m'},
+  {who:'Marcus D.',act:'bid $55 on Tyson Mabry',t:'14m'},
+  {who:'Owen B.',act:'bid $33 on Hideki Sato',t:'31m'},
+];
+function laneColor(k){return LANES.find(l=>l.key===k).color;}
+function renderAuction(){
+  $('#lots').innerHTML=LOTS.map(lot=>{
+    const c=laneColor(lot.sport);
+    const leading=lot.by==='you';
+    const min=lot.cur+1;
+    return `<div class="lot" id="lot-${lot.id}">
+      <div class="who2">
+        <div class="sportdot" style="background:${c}">${lot.sport.toUpperCase()}</div>
+        <div class="nminfo"><b>${lot.n}</b><small>${lot.meta}</small></div>
+      </div>
+      <div class="bidinfo">
+        <div class="cur">$${lot.cur}</div>
+        <div class="by">${leading?'<span style="color:var(--up)">you lead</span>':'high bid · '+lot.by}</div>
+        <div class="timer">closes in 3d</div>
+      </div>
+      <div class="act">
+        <button class="quickbid" onclick="quickBid('${lot.id}',${min})">Min $${min}</button>
+        <button class="quickbid" onclick="quickBid('${lot.id}',${lot.cur+5})">+$5</button>
+        <input type="number" id="bid-${lot.id}" placeholder="Bid amount ($)" min="${min}">
+        <button class="btn" onclick="placeBid('${lot.id}')" ${leading?'disabled':''}>${leading?'Leading':'Place bid'}</button>
+      </div>
+    </div>`;
+  }).join('');
+  renderAucSidebar();
+}
+function renderAucSidebar(){
+  $('#capLeft').innerHTML=`$${capLeft}<small>of $${capTotal} monthly cap remaining</small>`;
+  const used=Math.round((capTotal-capLeft)/capTotal*100);
+  $('#capPct').textContent=used+'%';
+  $('#capBar').style.width=used+'%';
+  $('#pickCount').textContent=`${picks} of ${pickMax}`;
+  $('#potSide').textContent='$'+pot.toLocaleString();
+  $('#potTop').textContent='$'+pot.toLocaleString();
+  $('#aucFeed').innerHTML=FEED.map(f=>`<div class="fitem"><b>${f.who}</b> ${f.act}<span class="t">${f.t}</span></div>`).join('');
+}
+function quickBid(id,amt){$('#bid-'+id).value=amt;placeBid(id);}
+function placeBid(id){
+  const lot=LOTS.find(l=>l.id===id);
+  const input=$('#bid-'+id);
+  const amt=parseInt(input.value,10);
+  if(!amt||amt<=lot.cur){flash(input,'Bid must beat $'+lot.cur);return;}
+  if(amt>capLeft){flash(input,'Over your cap ($'+capLeft+' left)');return;}
+  const prevLeadByYou=lot.by==='you';
+  lot.cur=amt;lot.by='you';
+  if(!prevLeadByYou){pot+=amt;capLeft-=amt;}
+  FEED.unshift({who:'You',act:`bid $${amt} on ${lot.n}`,t:'now'});
+  renderAuction();
+}
+function flash(el,msg){
+  const old=el.placeholder;el.value='';el.placeholder=msg;el.style.borderColor='var(--hot)';
+  setTimeout(()=>{el.placeholder=old;el.style.borderColor='';},1800);
+}
+
+/* ----- top available ----- */
+let availFilter='all', availSort='proj', availDir=-1;
+function renderAvailControls(){
+  const opts=['<option value="all">All sports</option>']
+    .concat(LANES.filter(l=>l.key!=='team').map(l=>`<option value="${l.key}">${l.label}</option>`));
+  $('#availSport').innerHTML=opts.join('');
+  $('#availSport').onchange=e=>{availFilter=e.target.value;renderAvail();};
+}
+function renderAvail(){
+  $('#availHead').innerHTML=`<tr>
+    <th onclick="setAvailSort('n')">Player</th>
+    <th onclick="setAvailSort('sport')">Lane</th>
+    <th onclick="setAvailSort('proj')" style="text-align:right">Projected ${availSort==='proj'?(availDir<0?'▼':'▲'):''}</th>
+    <th onclick="setAvailSort('trend')" style="text-align:right">7-day trend</th>
+  </tr>`;
+  let rows=AVAIL.filter(p=>availFilter==='all'||p.sport===availFilter);
+  rows.sort((a,b)=>{
+    let av=a[availSort],bv=b[availSort];
+    if(availSort==='trend'){av=parseFloat(a.trend);bv=parseFloat(b.trend);}
+    if(typeof av==='string')return av.localeCompare(bv)*availDir;
+    return (av-bv)*availDir;
+  });
+  $('#availBody').innerHTML=rows.map(p=>{
+    const c=laneColor(p.sport);
+    const tn=parseFloat(p.trend);
+    return `<tr>
+      <td class="pn"><b>${p.n}</b><small>${p.meta}</small></td>
+      <td><span class="tagsport" style="background:${c}">${p.sport.toUpperCase()}</span></td>
+      <td class="num proj">${p.proj.toLocaleString()}</td>
+      <td class="num" style="color:${tn>=0?'var(--up)':'var(--hot)'}">${tn>=0?'+':''}${p.trend}</td>
+    </tr>`;
+  }).join('');
+}
+function setAvailSort(k){if(availSort===k)availDir*=-1;else{availSort=k;availDir=k==='n'||k==='sport'?1:-1;}renderAvail();}
+
+/* ----- draft board ----- */
+/* Pool of draftable players by sport, roughly ordered best-first within each
+   sport. The snake draft pulls from a blended value order so early rounds mix
+   the premium names across sports, the way a real mixed-sport draft would. */
+const DRAFT_POOL = {
+  nfl:['Jamarr Okafor','Caleb Strong','Devin Marsh','Trey Donaldson','Aaron Wills','Mike Sutter','Bo Jennings','Cade Ferraro','Luther Banks','Rashawn Vine','Eli Crabtree','Jon Tackett','Sam Whitford','Pat Mooney','Dre Coleman','Hank Beaumont','Theo Lambert','Marcus Reed','Dax Holloway','Breece Sailor','Kendrick Vaughn','Jalen Carter','Isaiah Pruitt','Dane Whitlock'],
+  nba:['Andre Maxwell','Malik Osei','Bojan Petrović','Quentin Ross','Tyrell Banks','Cole Whitaker','Jaylen Pierce','Goran Mitić','Tre Coleman','Deshawn Pope','Ivan Belov','Marcus Heath','Ty Robinson','Kemba Voss','Niko Adler','Rashid Tate'],
+  nhl:['Lucas Frost','Viktor Lindholm','Sam Beaulieu','Niko Rautio','Garrett Pope','Anton Maček','Erik Sandberg','Pavel Doubek','Liam Forsberg','Cole Ranta','Max Liljgren','Tony Bevan'],
+  mlb:['Walker Hendrix','Jonah Pike','Trey Donovan','Diego Salazar','Brennan Cole','Kai Yamamoto','Marco Iannucci','Caleb Ortiz','Hideki Sato','Rafael Nunez','Owen Brady','Luis Carmona','Sam Whitlow','Gus Friedman'],
+  wnba:['Destiny Vaughn','Imani Brooks','Lena Hartwell','Tara Nilsson','Asha Carver','Rosa Delgado','Nadia Quinn','Bree Tomlin','Kayla Frost'],
+  pga:['Cameron Pike','Hugo Marchand','Sung-min Park','Beau Tanner','Liam Crowe','Diego Salas','Finn Aberdeen','Marco Reyes'],
+  atp:['Marin Kovač','Lucas Fontaine','Diego Ferro','Pavel Horák','Andre Lsocke','Kenji Mori','Tom Beckett'],
+  wta:['Aria Volkova','Mei Tanaka','Camila Rojas','Nadia Belikov','Sara Kessler','Lin Wei','Petra Hahn'],
+  epl:['Rafael Sá','Femi Adebayo','Caleb Murphy','Stefan Brandt','Reuben Castle','Dmitri Volk','Olivier Bex','Tariq Mensah','Joel Andersson','Kai Berger','Marco Pelle','Sven Olsson'],
+  ufc:['Damien Cross','Rashid Olawale','Bruno Vargas','Petra Nilsen','Kane Whitlow','Lev Orlov','Tana Reye'],
+};
+// Build a blended value queue: interleave each sport's best-first list so the
+// top of the queue is a realistic cross-sport run of premium talent.
+function buildDraftQueue(){
+  const lists = LANES.filter(l=>l.key!=='team').map(l=>({key:l.key, arr:[...DRAFT_POOL[l.key]]}));
+  // weight: how eagerly each sport gets picked early (more roster slots / star scarcity)
+  const weight = {nfl:1.0,nba:1.0,mlb:0.95,nhl:0.9,epl:0.9,wnba:0.7,pga:0.65,ufc:0.6,atp:0.55,wta:0.55};
+  const queue=[];
+  let progress=Object.fromEntries(lists.map(l=>[l.key,0]));
+  const total=lists.reduce((a,l)=>a+l.arr.length,0);
+  while(queue.length<total){
+    // pick the sport whose next selection is "most overdue" by weighted progress
+    let best=null,bestScore=-1;
+    for(const l of lists){
+      if(progress[l.key]>=l.arr.length) continue;
+      // lower normalized progress + higher weight => more likely next
+      const norm=progress[l.key]/l.arr.length;
+      const jitter=seeded(queue.length*13+l.key.length*7)*0.12;
+      const score=weight[l.key]*(1-norm)+jitter;
+      if(score>bestScore){bestScore=score;best=l;}
+    }
+    queue.push({sport:best.key, name:best.arr[progress[best.key]]});
+    progress[best.key]++;
+  }
+  return queue;
+}
+const DRAFT_QUEUE = buildDraftQueue();
+const _FIRST=['Alex','Jordan','Cam','Drew','Reed','Cole','Max','Kai','Ty','Jude','Nico','Beau','Sven','Luca','Omar','Rhys','Dane','Kobe','Zane','Pierce','Hugo','Milo','Otto','Rex'];
+const _LAST=['Vance','Cobb','Marsh','Quinn','Sloane','Hahn','Ortega','Webb','Frost','Lund','Bauer','Reyes','Kane','Voss','Pratt','Lowe','Stark','Nash','Cruz','Dahl'];
+const DRAFT_ROUNDS = 15;
+// Pad the queue with depth picks (cycling sports) up to 15 full rounds.
+(function padQueue(){
+  const sports=LANES.filter(l=>l.key!=='team').map(l=>l.key);
+  let i=0;
+  while(DRAFT_QUEUE.length<DRAFT_ROUNDS*12){
+    const sport=sports[i%sports.length];
+    const f=_FIRST[(i*7)%_FIRST.length], l=_LAST[(i*5)%_LAST.length];
+    DRAFT_QUEUE.push({sport,name:`${f} ${l}`});
+    i++;
+  }
+})();
+// Assign to snake order. picks[round][col] = {overall, sport, name, mgr}
+const DRAFT_ORDER = MGRS.map(m=>m.id); // managers indexed by draft slot 1..12
+function buildDraft(){
+  const rows=[];
+  let qi=0, overall=0;
+  for(let r=0;r<DRAFT_ROUNDS;r++){
+    const leftToRight = r%2===0;
+    const row=[];
+    for(let c=0;c<12;c++){
+      const slot = leftToRight ? c : 11-c;       // serpentine
+      const mgrId = DRAFT_ORDER[slot];
+      const pk = DRAFT_QUEUE[qi++] || {sport:'nfl',name:'—'};
+      overall++;
+      row[slot] = {overall, sport:pk.sport, name:pk.name, mgr:mgrId};
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+const DRAFT = buildDraft();
+
+let draftSportFilter='all';
+function renderDraftControls(){
+  const opts = [{k:'all',label:'All'}].concat(
+    LANES.filter(l=>l.key!=='team').map(l=>({k:l.key,label:l.label})));
+  $('#draftFilter').innerHTML=opts.map(o=>
+    `<button class="${o.k===draftSportFilter?'active':''}" data-k="${o.k}">${o.label}</button>`).join('');
+  $('#draftFilter').onclick=e=>{
+    const b=e.target.closest('button');if(!b)return;
+    draftSportFilter=b.dataset.k;
+    renderDraftControls();renderDraftBoard();
+    $('#draftHint').textContent = draftSportFilter==='all'
+      ? 'Highlighting all picks · hover a pick for detail'
+      : `Highlighting ${LANES.find(l=>l.key===draftSportFilter).label} picks only`;
+  };
+}
+function renderDraftBoard(){
+  // header: round col + 12 managers in draft-slot order
+  let head='<tr><th class="rnd">RND</th>';
+  DRAFT_ORDER.forEach((mid,slot)=>{
+    const m=MGRS.find(x=>x.id===mid);
+    head+=`<th><div class="mgr-h">
+      <span class="av" style="background:linear-gradient(135deg,${m.c1},${m.c2})">${initials(m.name)}</span>
+      ${m.name}</div></th>`;
+  });
+  head+='</tr>';
+  $('#draftHead').innerHTML=head;
+
+  let body='';
+  DRAFT.forEach((row,r)=>{
+    body+=`<tr><td class="rnd">${r+1}</td>`;
+    for(let slot=0;slot<12;slot++){
+      const pk=row[slot];
+      const lane=LANES.find(l=>l.key===pk.sport);
+      const mine = pk.mgr===1;
+      const dim = draftSportFilter!=='all' && pk.sport!==draftSportFilter;
+      const hot = draftSportFilter!=='all' && pk.sport===draftSportFilter;
+      body+=`<td><span class="pick ${dim?'dim':''} ${hot?'hot':''} ${mine?'mine':''}"
+        title="Pick ${pk.overall} · ${pk.name} · ${lane.label}">
+        <span class="pno">${pk.overall}</span>
+        <span class="pnm">${pk.name}</span>
+        <span class="pmeta"><span class="sdot" style="background:${lane.color}"></span>${lane.label}</span>
+      </span></td>`;
+    }
+    body+='</tr>';
+  });
+  $('#draftBody').innerHTML=body;
+}
+
+/* ----- cell mode toggle ----- */
+$('#cellMode').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  cellMode=b.dataset.mode;
+  $$('#cellMode button').forEach(x=>x.classList.toggle('active',x===b));
+  renderMatrix();
+});
+
+/* ----- init ----- */
+renderLeaders();
+renderMatrix();
+renderSportNav();renderRoster();
+renderRuleTabs();renderRuleContent();
+renderAuction();
+renderAvailControls();renderAvail();
+renderDraftControls();renderDraftBoard();
+</script>
+</body>
+</html>
